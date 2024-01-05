@@ -1,5 +1,5 @@
 # GPT
-The GPT open-source project by Selldone offers scripts and documentation for implementing GPT technology, facilitating its integration and utilization in various applications.
+The GPT open-source project by Selldone offers scripts and documentation for implementing GPT for [**Open AI Store**](https://openai.com/blog/introducing-gpts), facilitating its integration and utilization in various applications.
 
 
 ## Schema.json

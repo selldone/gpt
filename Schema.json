@@ -1,0 +1,70 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "My shops",
+    "description": "Get information about my business and sales on Selldone.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.selldone.com"
+    }
+  ],
+  "paths": {
+    "/security/2fa/check": {
+      "get": {
+        "description": "Check user two-factor authentication is enabled? If the 'user' value is in response, it means the user successfully logged in. Otherwise, call Verify2FA",
+        "operationId": "Check2FA",
+        "parameters": [],
+        "deprecated": false
+      }
+    },
+"/auth/2fa": {
+  "post": {
+    "description": "Request user to enter 6 digit number 2FA code if Check2FA does not return 'user' value in its response.",
+    "operationId": "Verify2FA",
+    "parameters": [],
+    "requestBody": {
+      "description": "6-digit 2FA numeric code to verify access.",
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "6-digit 2FA numeric code to verify access."
+              }
+            }
+          }
+        }
+      }
+    },
+    "deprecated": false
+  }
+}
+,
+    "/shops/me": {
+      "get": {
+        "description": "Get the list of my shops",
+        "operationId": "GetShops",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Something about business name or its URL.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

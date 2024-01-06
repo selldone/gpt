@@ -8,6 +8,18 @@ The schema.json file contains the structure of the GPT data. This file is used t
 
 The provided schema is a configuration for an OpenAPI Specification (OAS) document, version 3.1.0, detailing the structure and behavior of an API for "My shops" related to a business and sales platform on Selldone. This document is structured to provide comprehensive information about the API's paths, methods, and operational details. Here's a detailed breakdown of each section and item within the schema:
 
+
+## OAuth Configuration
+Authorization URL: `https://selldone.com/oauth/authorize`
+
+Token URL: `https://selldone.com/oauth/token`
+
+Scopes: `read-shops profile`
+
+Privacy: `https://selldone.com/privacy`
+
+
+
 ### 1. **openapi**: "3.1.0"
 - **Definition**: Specifies the version of the OpenAPI Specification that this document conforms to. It dictates the overall structure and available features.
 

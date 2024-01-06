@@ -16,35 +16,70 @@
         "description": "Check user two-factor authentication is enabled? If the 'user' value is in response, it means the user successfully logged in. Otherwise, call Verify2FA",
         "operationId": "Check2FA",
         "parameters": [],
-        "deprecated": false
-      }
-    },
-"/auth/2fa": {
-  "post": {
-    "description": "Request user to enter 6 digit number 2FA code if Check2FA does not return 'user' value in its response.",
-    "operationId": "Verify2FA",
-    "parameters": [],
-    "requestBody": {
-      "description": "6-digit 2FA numeric code to verify access.",
-      "required": true,
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "code": {
-                "type": "string",
-                "description": "6-digit 2FA numeric code to verify access."
+        "responses": {
+          "200": {
+            "description": "2FA status retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "user": {
+                    "$ref": "#/components/schemas/User"
+                  },
+                  "has_2fa": true
+                }
               }
             }
+          },
+          "400": {
+            "description": "Invalid Request"
           }
         }
       }
     },
-    "deprecated": false
-  }
-}
-,
+    "/auth/2fa": {
+      "post": {
+        "description": "Request user to enter 6 digit number 2FA code if Check2FA does not return 'user' value in its response.",
+        "operationId": "Verify2FA",
+        "parameters": [],
+        "requestBody": {
+          "description": "6-digit 2FA numeric code to verify access.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$",
+                    "description": "6-digit 2FA numeric code to verify access."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The 2FA code is valid an and now API calls are authenticated with this Bearer token.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "token_verified": true,
+                  "user": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Incorrect 2FA Code"
+          }
+        }
+      }
+    },
     "/shops/me": {
       "get": {
         "description": "Get the list of my shops",
@@ -60,11 +95,764 @@
             }
           }
         ],
-        "deprecated": false
+        "responses": {
+          "200": {
+            "description": "List of shops retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "shops": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Shop"
+                    },
+                    "description": "List of my shops."
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Request"
+          }
+        }
       }
     }
   },
   "components": {
-    "schemas": {}
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "The unique identifier for the user."
+          },
+          "name": {
+            "type": "string",
+            "description": "The user's full name."
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email address."
+          },
+          "phone": {
+            "type": "string",
+            "description": "The user's phone number."
+          },
+          "email_verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user verified their email address."
+          },
+          "socials_login": {
+            "$ref": "#/components/schemas/UserSocialLogin",
+            "description": "Social login flags for the user."
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/UserPreferences",
+            "description": "User preferences settings."
+          },
+          "interest": {
+            "$ref": "#/components/schemas/UserInterest",
+            "description": "User's interests grouped by categories."
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Indicates if the user is subscribed."
+          },
+          "block_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp indicating when the user was blocked."
+          },
+          "block_hours": {
+            "type": "number",
+            "description": "Duration (in hours) the user was last blocked. Used for calculating the next punishment period."
+          },
+          "ban": {
+            "type": "string",
+            "enum": [
+              "BanLevel1",
+              "BanLevel2",
+              "BanLevel3"
+            ],
+            "description": "Ban level for the user."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Key-value pairs for storing metadata (private). Used for keeping third-party customer IDs and other values."
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was soft deleted."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was last updated."
+          }
+        }
+      },
+      "UserSocialLogin": {
+        "type": "object",
+        "properties": {
+        }
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+        }
+      },
+      "UserInterest": {
+        "type": "object",
+        "properties": {
+        }
+      },
+      "Shop": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "The unique identifier for the shop."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the shop."
+          },
+          "user_id": {
+            "type": "number",
+            "description": "The unique identifier for the user associated with the shop."
+          },
+          "home": {
+            "$ref": "#/components/schemas/ShopHome",
+            "description": "Represents the shop's homepage configuration."
+          },
+          "language": {
+            "type": "string",
+            "description": "The default language for the shop."
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the shop."
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the shop."
+          },
+          "icon": {
+            "type": "string",
+            "description": "The icon associated with the shop."
+          },
+          "fav": {
+            "type": "string",
+            "description": "The favorite icon for the shop."
+          },
+          "official": {
+            "type": "boolean",
+            "description": "Indicates if the shop is official."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Indicates if the shop is active."
+          },
+          "restriction": {
+            "type": "string",
+            "description": "The shop's access restriction setting."
+          },
+          "license": {
+            "type": "string",
+            "enum": [
+              "License1",
+              "License2",
+              "License3"
+            ],
+            "description": "The licensing code for the shop."
+          },
+          "capacity": {
+            "type": "number",
+            "description": "The storage capacity of the shop in KB."
+          },
+          "expire_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The expiration date of the shop."
+          },
+          "info": {
+            "$ref": "#/components/schemas/ShopInfo",
+            "description": "Additional info about the shop."
+          },
+          "support_mode": {
+            "type": "string",
+            "description": "Support mode for the shop."
+          },
+          "support": {
+            "type": "array",
+            "items": {},
+            "description": "Support details."
+          },
+          "address_verified": {
+            "type": "boolean",
+            "description": "Indicates if the address associated with the shop is verified."
+          },
+          "phone_verified": {
+            "type": "boolean",
+            "description": "Indicates if the phone number associated with the shop is verified."
+          },
+          "gold": {
+            "type": "boolean",
+            "description": "Indicates if the shop has a gold status."
+          },
+          "penalty": {
+            "type": "boolean",
+            "description": "Indicates if the shop has any penalties."
+          },
+          "purge_at": {
+            "type": "string",
+            "description": "The date when the shop and its content will be deleted."
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOption"
+            },
+            "description": "Configuration options for the shop."
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain associated with the shop."
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Currency1",
+                "Currency2",
+                "Currency3"
+              ]
+            },
+            "description": "Supported currencies for the shop."
+          },
+          "footer": {
+            "type": "array",
+            "items": {},
+            "description": "Configuration for the footer of the shop."
+          },
+          "theme": {
+            "$ref": "#/components/schemas/ShopTheme",
+            "description": "Theme configuration for the shop."
+          },
+          "avocado": {
+            "type": "array",
+            "items": {},
+            "description": "Configuration for Avocado form."
+          },
+          "hyper": {
+            "type": "array",
+            "items": {},
+            "description": "Configuration for Hyper."
+          },
+          "ribbon": {
+            "$ref": "#/components/schemas/ShopRibbon",
+            "description": "Configuration for Ribbon. Its the default behavior of subscription products."
+          },
+          "marketplace": {
+            "type": "array",
+            "items": {},
+            "description": "Configuration for the marketplace."
+          },
+          "model": {
+            "type": "string",
+            "description": "The business model of the shop."
+          },
+          "local": {
+            "$ref": "#/components/schemas/Domain",
+            "description": "Domain details for local configuration."
+          },
+          "sub": {
+            "$ref": "#/components/schemas/Domain",
+            "description": "Domain details for sub-domain configuration."
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Supported countries for the shop."
+          },
+          "lottery": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Information regarding the lottery."
+          },
+          "tax": {
+            "type": "array",
+            "items": {},
+            "description": "Tax information for the shop."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation date of the shop."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The last updated date for the shop."
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The deletion date for the shop."
+          },
+          "client_id": {
+            "type": "number",
+            "description": "Agency client ID associated with the shop."
+          },
+          "drop_shipping": {
+            "type": "boolean",
+            "description": "Indicates if the shop operates in dropshipping mode."
+          },
+          "dropShipping_products": {
+            "type": "number",
+            "description": "The number of dropshipping products."
+          },
+          "dropShipping_sells": {
+            "type": "number",
+            "description": "The number of dropshipping products sold."
+          },
+          "dropShipping_score": {
+            "type": "number",
+            "description": "The dropshipping score for the shop."
+          },
+          "shop_exchange_rates": {
+            "type": "array",
+            "items": {},
+            "description": "Shop exchange rates."
+          }
+        }
+      },
+      "ShopHome": {
+        "type": "string",
+        "enum": [
+          "blog",
+          "avocado",
+          "hyper",
+          "community",
+          "shop",
+          "map",
+          "landing_page"
+        ],
+        "description": "Represents the shop's homepage configuration."
+      },
+      "ShopInfo": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "nullable": true,
+            "description": "The location of the shop."
+          },
+          "daysOpen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "description": "Days when the shop is open."
+          },
+          "times": {
+            "type": "string",
+            "nullable": true,
+            "description": "Opening times of the shop."
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "description": "The address of the shop."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "The email address of the shop."
+          },
+          "country": {
+            "type": "string",
+            "nullable": true,
+            "description": "The country of the shop."
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "The postal code of the shop."
+          },
+          "countryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "The country code of the shop."
+          },
+          "region": {
+            "type": "string",
+            "nullable": true,
+            "description": "The region of the shop."
+          },
+          "locality": {
+            "type": "string",
+            "nullable": true,
+            "description": "The locality of the shop."
+          },
+          "days_open": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+              ]
+            },
+            "nullable": true,
+            "description": "Days when the shop is open based on the WeekDays enum."
+          }
+        },
+        "description": "Additional info about the shop."
+      },
+      "ShopOption": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The code for the shop option."
+          },
+          "value": {
+            "type": "array",
+            "items": {
+              "code": {
+                "type": "string",
+                "description": "The code for the shop option."
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "array"
+                  }
+                ],
+                "description": "The value for the shop option."
+              }
+            },
+            "description": "The custom options of shop."
+          }
+        }
+      },
+      "ShopTheme": {
+        "type": "object",
+        "properties": {
+          "color_light": {
+            "type": "string"
+          },
+          "color_dark": {
+            "type": "string"
+          },
+          "color_deep_dark": {
+            "type": "string"
+          },
+          "color_info": {
+            "type": "string"
+          },
+          "color_buy": {
+            "type": "string"
+          },
+          "color_bill": {
+            "type": "string"
+          },
+          "light_checkout": {
+            "type": "boolean"
+          },
+          "light_header": {
+            "type": "boolean"
+          },
+          "light_footer": {
+            "type": "boolean"
+          },
+          "light_filter": {
+            "type": "boolean"
+          },
+          "mobile": {
+            "type": "string"
+          },
+          "tablet": {
+            "type": "string"
+          },
+          "pc": {
+            "type": "string"
+          },
+          "static": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hover_actions": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "only_available": {
+            "type": "boolean"
+          },
+          "smart_price": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "font_family": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "font_res": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reverse_currency": {
+            "type": "boolean"
+          },
+          "logo": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "logo_w": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "logo_h": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "css": {
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Shop theme configuration."
+      },
+      "ShopRibbon": {
+        "type": "object",
+        "properties": {
+          "shipping": {
+            "type": "boolean",
+            "description": "Ask for shipping address"
+          },
+          "billing": {
+            "type": "boolean",
+            "description": "Ask for billing address"
+          },
+          "cart": {
+            "type": "boolean",
+            "description": "Car mode (add multiple subscriptions to cart)"
+          },
+          "count": {
+            "type": "boolean",
+            "description": "User can buy more than one subscription per product."
+          }
+        },
+        "description": "Subscription selling configuration in the shop."
+      },
+      "Domain": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the domain."
+          },
+          "shop_id": {
+            "type": "number",
+            "description": "Identifier of the associated shop."
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "Indicates if this is the primary domain for the shop."
+          },
+          "indexed": {
+            "type": "boolean",
+            "description": "Indicates if the domain is indexed."
+          },
+          "domain": {
+            "type": "string",
+            "description": "The domain name."
+          },
+          "home": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Domain home page (can be null, a page_id, 'avocado', or 'blog')."
+          },
+          "approved": {
+            "type": "boolean",
+            "description": "Indicates if the domain is approved."
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "Indicates if the domain is enabled."
+          },
+          "expire_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Date and time when the domain expires."
+          },
+          "ssl_proxy": {
+            "type": "boolean",
+            "description": "Indicates if the domain was added via SSL proxy IPs."
+          },
+          "ssl": {
+            "type": "boolean",
+            "description": "Indicates the health status of domain SSL."
+          },
+          "issue_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Last date and time when a request was sent to issue SSL by SSL proxy."
+          },
+          "check_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Last date and time when the domain was checked."
+          },
+          "https": {
+            "type": "boolean",
+            "description": "Indicates if http should be forced to https."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Last error message, if any."
+          },
+          "affiliate_id": {
+            "type": "number",
+            "description": "Identifier of the attached affiliate."
+          },
+          "info": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Additional domain information provided by the user."
+          },
+          "debug": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Debug details for selldone admin."
+          },
+          "certificate": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Certificate information (see SSLCertificate)."
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Date and time when the domain was created."
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Date and time when the domain was last updated."
+          }
+        },
+        "description": "Information about shop main domain."
+      }
+    }
   }
 }

@@ -14,7 +14,7 @@ Authorization URL: `https://selldone.com/oauth/authorize`
 
 Token URL: `https://selldone.com/oauth/token`
 
-Scopes: `read-shops profile`
+Scopes: `read-shops profile backoffice-read-products`
 
 Privacy: `https://selldone.com/privacy`
 

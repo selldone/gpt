@@ -13,8 +13,8 @@
   "paths": {
     "/security/2fa/check": {
       "get": {
-        "description": "Check user two-factor authentication is enabled? If the 'user' value is in response, it means the user successfully logged in. Otherwise, call Verify2FA",
         "operationId": "Check2FA",
+        "description": "Check user two-factor authentication is enabled? If the 'user' value is in response, it means the user successfully logged in. Otherwise, call Verify2FA",
         "parameters": [],
         "responses": {
           "200": {
@@ -38,8 +38,8 @@
     },
     "/auth/2fa": {
       "post": {
-        "description": "Request user to enter 6 digit number 2FA code if Check2FA does not return 'user' value in its response.",
         "operationId": "Verify2FA",
+        "description": "Request user to enter 6 digit number 2FA code if Check2FA does not return 'user' value in its response.",
         "parameters": [],
         "requestBody": {
           "description": "6-digit 2FA numeric code to verify access.",
@@ -82,8 +82,8 @@
     },
     "/shops/me": {
       "get": {
-        "description": "Get the list of my shops",
         "operationId": "GetShops",
+        "description": "Get the list of my shops",
         "parameters": [
           {
             "name": "search",
@@ -114,6 +114,100 @@
           },
           "400": {
             "description": "Invalid Request"
+          }
+        }
+      }
+    },
+    "/shops/{shop_id}/products/{product_id}/admin": {
+      "get": {
+        "operationId": "GetProductInfo",
+        "summary": "Get Product Information by Shop and Product ID",
+        "description": "Returns information about the product by product ID and shop ID, including statistics for a specified time period. Request the user to input the URL for the product's admin page, formatted as 'https://selldone.com/shuttle/shop/{shop_id}/product/{product_id}/...,'",
+        "parameters": [
+          {
+            "name": "shop_id",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier for the shop",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier for the product",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Offset days from now to get statistic information about product sell, inventory, finance, views, etc.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of days from the offset day to look back, i.e., the number of data records to return.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30
+            }
+          },
+          {
+            "name": "with_trashed",
+            "in": "query",
+            "description": "Include or exclude trashed (deleted) items in the response.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of product details and statistics for the specified shop and product",
+            "content": {
+              "application/json": {
+                "example": {
+                  "product": {
+                    "$ref": "#/components/schemas/Product"
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ProductData"
+                    }
+                  },
+                  "orderQue": {
+                    "type": "array",
+                    "items": {
+                      "count": {
+                        "type": "integer",
+                        "description": "Number of orders in the queue."
+                      },
+                      "delivery_state": {
+                        "type": "string",
+                        "description": "Delivery state of the order."
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Type of the order."
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -852,6 +946,672 @@
           }
         },
         "description": "Information about shop main domain."
+      },
+      "Product": {
+        "type": "object",
+        "required": [
+          "id",
+          "shop_id",
+          "currency",
+          "commission",
+          "condition",
+          "price"
+        ],
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the product."
+          },
+          "shop_id": {
+            "type": "number",
+            "description": "Identifier for the shop owning the product."
+          },
+          "action": {
+            "type": "string",
+            "description": "Product buy call to action."
+          },
+          "ar": {
+            "$ref": "#/components/schemas/Product.IAR",
+            "description": "AR 3D model, created by the system."
+          },
+          "badges": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "Array of badge identifiers associated with the product."
+          },
+          "best_content": {
+            "type": "boolean",
+            "description": "Indicates if product has great ranked content."
+          },
+          "best_seller": {
+            "type": "boolean",
+            "description": "Indicates if this is the bestseller product."
+          },
+          "blog": {
+            "type": "string",
+            "description": "Link to external resources shown on the product page."
+          },
+          "brand": {
+            "type": "string",
+            "description": "Brand name of the product."
+          },
+          "category_id": {
+            "type": "number",
+            "description": "Identifier for the product's category."
+          },
+          "commission": {
+            "type": "number",
+            "default": 0,
+            "description": "Commission on the product."
+          },
+          "condition": {
+            "type": "string",
+            "default": "NEW",
+            "description": "Condition of the product, e.g., 'NEW', 'USED', 'REFURBISHED'."
+          },
+          "connect_id": {
+            "type": "number",
+            "description": "Identifier for the connect provider that created this product."
+          },
+          "cons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "List of disadvantages."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code, e.g., 'USD', 'EUR'."
+          },
+          "dis_end": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "End date for the product discount."
+          },
+          "dis_start": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Start date for the product discount."
+          },
+          "discount": {
+            "type": "number",
+            "description": "Discount amount on the product."
+          },
+          "extra": {
+            "$ref": "#/components/schemas/Product.IExtra",
+            "description": "Additional product details."
+          },
+          "for_auction": {
+            "type": "number",
+            "description": "Total users waiting for auction."
+          },
+          "for_available": {
+            "type": "number",
+            "description": "Total users waiting for availability."
+          },
+          "gpc": {
+            "type": "string",
+            "description": "Global Product Classification code."
+          },
+          "gtin": {
+            "type": "string",
+            "description": "Global Trade Item Number."
+          },
+          "guide_id": {
+            "type": "number",
+            "description": "Assigned guide profile ID shown on the product page."
+          },
+          "hsn": {
+            "type": "string",
+            "description": "Harmonized System Nomenclature code for international trade."
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Input form structure for extra information about purchased product."
+          },
+          "lead": {
+            "type": "string",
+            "description": "Lead time required for the product."
+          },
+          "map_id": {
+            "type": "number",
+            "description": "Assigned location tag on the map."
+          },
+          "message": {
+            "type": "string",
+            "description": "Note shown to the customer in the product and basket page."
+          },
+          "mpn": {
+            "type": "string",
+            "description": "Manufacturer Part Number for the product."
+          },
+          "note": {
+            "type": "any",
+            "description": "General note or additional information about the product."
+          },
+          "officer": {
+            "type": "number",
+            "description": "Officer user id, the user who creates this product."
+          },
+          "order": {
+            "type": "number",
+            "description": "Order index to custom sort products."
+          },
+          "original": {
+            "type": "boolean",
+            "description": "Indicates if the product is original."
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Output form structure for virtual items purchase."
+          },
+          "parent_id": {
+            "type": "number",
+            "description": "For middle sellers, the main product in drop-shipping supplier store."
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the product."
+          },
+          "price_input": {
+            "$ref": "#/components/schemas/Product.PriceInputType",
+            "description": "Type of input used for the product price."
+          },
+          "price_label": {
+            "type": "string",
+            "description": "Extra info about price (e.g., $1.5/Fl Oz)."
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/Product.ProductPricing",
+            "description": "Pricing strategy for the product."
+          },
+          "pros": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "List of advantages or positive aspects."
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Available quantity of the product."
+          },
+          "rate": {
+            "type": "number",
+            "description": "Average rating of the product."
+          },
+          "rate_count": {
+            "type": "number",
+            "description": "Total number of buyers who rated this product."
+          },
+          "repository_id": {
+            "type": "number",
+            "description": "Identifier for the products repository this product was created from."
+          },
+          "reselling": {
+            "type": "boolean",
+            "description": "Indicates if the product is available for drop-shipping."
+          },
+          "reselling_count": {
+            "type": "number",
+            "description": "Total number of products sold by resellers."
+          },
+          "reselling_shops": {
+            "type": "number",
+            "description": "Total number of shops reselling this product."
+          },
+          "return_policy_id": {
+            "type": "number",
+            "description": "Assigned return policy profile ID."
+          },
+          "return_warranty": {
+            "type": "number",
+            "description": "Duration in hours to return goods after receiving order by buyer."
+          },
+          "ribbon": {
+            "$ref": "#/components/schemas/Product.IRibbon",
+            "description": "Ribbon configurations."
+          },
+          "sells": {
+            "type": "number",
+            "description": "Total sales of this product."
+          },
+          "shipping": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Custom shipping price for drop-shipping suppliers."
+          },
+          "shipping_id": {
+            "type": "number",
+            "description": "Assigned shipping profile ID."
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock Keeping Unit identifier for the product."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug to create SEO friendly URL."
+          },
+          "spec": {
+            "$ref": "#/components/schemas/Product.ISpec",
+            "description": "Product specifications as key/value pairs."
+          },
+          "spec_order": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Order of items in the spec table."
+          },
+          "status": {
+            "$ref": "#/components/schemas/Product.ProductStatus",
+            "description": "Availability of the product, e.g., 'Open', 'Close'."
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "contain": {
+                "type": "boolean"
+              }
+            },
+            "description": "Style of the product."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of product tags."
+          },
+          "tax_id": {
+            "type": "number",
+            "description": "Assigned tax profile ID."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the product."
+          },
+          "title_en": {
+            "type": "string",
+            "description": "Subtitle of the product, preferably in English."
+          },
+          "type": {
+            "$ref": "#/components/schemas/Product.ProductType",
+            "description": "Type of product."
+          },
+          "unit": {
+            "type": "string",
+            "description": "Custom product unit, e.g., cm, litre, bottle."
+          },
+          "unit_float": {
+            "type": "boolean",
+            "description": "Indicates if a fractional unit can be ordered, e.g., 3.5 kg of fruit."
+          },
+          "valuation_id": {
+            "type": "number",
+            "description": "Identifier for the valuation method used."
+          },
+          "variants": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Product.IVariant"
+            },
+            "description": "List of product variants."
+          },
+          "vendor_id": {
+            "type": "number",
+            "description": "Identifier for the vendor of the product."
+          },
+          "video": {
+            "type": "string",
+            "description": "Youtube video ID for the product."
+          },
+          "visits": {
+            "type": "number",
+            "description": "Total number of visits to the product page."
+          },
+          "warranty": {
+            "type": "string",
+            "description": "Short warranty condition and name."
+          },
+          "warranty_id": {
+            "type": "number",
+            "description": "Assigned warranty profile ID."
+          },
+          "locations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Specific locations associated with the product."
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional icon for the product."
+          }
+        }
+      },
+      "Product.ProductType": {
+        "type": "string",
+        "enum": [
+          "PHYSICAL",
+          "VIRTUAL",
+          "SERVICE",
+          "FILE",
+          "SUBSCRIPTION"
+        ]
+      },
+      "Product.PriceInputType": {
+        "type": "string",
+        "enum": [
+          "default",
+          "area",
+          "volume",
+          "custom"
+        ]
+      },
+      "Product.ProductPricing": {
+        "type": "string",
+        "enum": [
+          "FIX",
+          "ESTIMATION",
+          "AGREEMENT",
+          "BID"
+        ]
+      },
+      "Product.ProductCondition": {
+        "type": "string",
+        "enum": [
+          "new",
+          "refurbished",
+          "used",
+          "used_fair",
+          "used_good",
+          "used_like_new"
+        ]
+      },
+      "Product.ProductStatus": {
+        "type": "string",
+        "enum": [
+          "Open",
+          "Close",
+          "Pending",
+          "Rejected"
+        ]
+      },
+      "Product.ISpec": {
+        "type": "object",
+        "description": "A JSON of key/value pairs representing the product specifications.",
+        "properties": {
+        },
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string",
+              "enum": [
+                "group"
+              ]
+            }
+          ]
+        }
+      },
+      "Product.IVariant": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "style": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "weight": {
+            "type": "string"
+          },
+          "pack": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "Product.IRibbon": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "enum",
+            "enum": [
+              "SubBox",
+              "Membership",
+              "SubPhysical",
+              "SubVirtual",
+              "SubFile",
+              "SubService"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "number"
+                },
+                "variant_id": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "count": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "billing": {
+            "type": "boolean"
+          },
+          "shipping": {
+            "type": "boolean"
+          },
+          "count": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Product.IAR": {
+        "type": "object",
+        "properties": {
+          "src_file": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "src": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size_src": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name_src": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Product.IExtra": {
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "length": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "height": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "weight": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ProductData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Unique identifier for the data entry."
+          },
+          "product_id": {
+            "type": "number",
+            "description": "ID of the associated product."
+          },
+          "price": {
+            "type": "number",
+            "description": "Price of the product in Rial."
+          },
+          "count": {
+            "type": "number",
+            "description": "Total quantity of items."
+          },
+          "sell": {
+            "type": "number",
+            "description": "Total number of products sold."
+          },
+          "send": {
+            "type": "number",
+            "description": "Total number of products sent."
+          },
+          "views": {
+            "type": "number",
+            "description": "Total number of product views."
+          },
+          "likes": {
+            "type": "number",
+            "description": "Total number of likes for the product."
+          },
+          "powers": {
+            "type": "number",
+            "description": "Some property related to the power metric of the product."
+          },
+          "favorites": {
+            "type": "number",
+            "description": "Total number of times the product has been favorited."
+          },
+          "wishlist": {
+            "type": "number",
+            "description": "Total number of times the product has been added to wishlists."
+          },
+          "comments": {
+            "type": "number",
+            "description": "Total number of comments on the product."
+          },
+          "comments_approved": {
+            "type": "number",
+            "description": "Total number of approved comments on the product."
+          },
+          "ratings": {
+            "type": "number",
+            "description": "Total number of ratings for the product."
+          },
+          "rating_star": {
+            "type": "number",
+            "description": "Average star rating of the product (ranges from 1 to 5)."
+          },
+          "reselling_shops": {
+            "type": "number",
+            "description": "Number of shops reselling the product."
+          },
+          "reselling_count": {
+            "type": "number",
+            "description": "Count related to reselling of the product."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the record was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the record was last updated."
+          }
+        }
       }
     }
   }
